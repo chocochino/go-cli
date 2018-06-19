@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'go_cli'
+
+app = GoCli::App.new  
+app.starting_app
+
