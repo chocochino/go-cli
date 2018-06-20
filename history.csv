@@ -1,0 +1,16 @@
+ID,Driver,Fare,Route
+1,No. 3,IDR 3.900,"- Start at (2,15)
+- Go to (2,10)
+- Turn left
+- Go to (10,10)
+- Finish at (10,10)"
+2,No. 5,IDR 600,"- Start at (5,4)
+- Go to (5,5)
+- Turn left
+- Go to (4,5)
+- Finish at (4,5)"
+3,No. 5,IDR 1.500,"- Start at (5,8)
+- Go to (5,5)
+- Turn right
+- Go to (3,5)
+- Finish at (3,5)"

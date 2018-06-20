@@ -4,6 +4,7 @@ require "go_cli/driver"
 require "go_cli/user"
 require "go_cli/map"
 require "go_cli/order"
+require "csv"
 
 module GoCli
   class App
@@ -14,6 +15,9 @@ module GoCli
       @drivers_amount = 5
       @base_fare = 300
       @drivers = Array.new
+      @history_filename = "history.csv"
+      create_history_file unless File.exist?(@history_filename)
+      @order_amount = CSV.foreach(@history_filename, headers: true).count
     end
 
     def starting_app
@@ -52,6 +56,10 @@ module GoCli
         @drivers.push(driver)
         @map.assign_person(person: driver)
       end
+    end
+
+    def create_history_file
+      CSV.open(@history_filename, "wb", write_headers: true) { |csv| csv << %w(ID Driver Fare Route)}
     end
 
     def menu
@@ -96,19 +104,33 @@ module GoCli
       puts "\n"
 
       # show details about the order
+      order = Order.new(origin: @user.position, destination_x: choice[0], destination_y: choice[1], order_id: @order_amount)
       driver = order.find_nearest_driver(list: @drivers)
       puts "Driver #{driver.name} will take you to your destination."
-      order = Order.new(origin: @user.position, destination_x: choice[0], destination_y: choice[1])
-      order.show_route
-      order.calculate_fare(base_fare: @base_fare)
+      puts "Here is the route you will be taking: \n#{order.create_route}"
+      puts "We estimate this trip will cost you #{order.calculate_fare(base_fare: @base_fare)}."
       
       # order confirmation
       menu unless order.confirm_order?   # back to menu if order cancelled
-      puts "Your trip is done. Thank you for using GO-RIDE service."
+      order.add_to_history(@history_filename)
+      @order_amount += 1
+      puts "\nYour trip has finished. Thank you for using GO-RIDE service."
     end
 
     def view_history
-      puts "Please finish at least one trip using GO-RIDE to view history."
+      if @order_amount == 0
+        puts "Please finish at least one trip using GO-RIDE to view history."
+        menu
+      end
+      puts "Here are your trip history:"
+      CSV.open(@history_filename, headers: true) do |entry|
+        entry.each do |history|
+          route = history['Route'].split("\n")
+          puts "#{history['ID']}. Driver's name: #{history['Driver']}", "   Fare: #{history['Fare']}", "   Route: #{route[0]}"
+          1.upto(route.length-1) { |i| puts "          #{route[i]}"}
+          puts ""
+        end
+      end
     end
   end
 end
