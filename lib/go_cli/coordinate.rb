@@ -15,9 +15,16 @@ class Coordinate
     @y = rand(1..size)
   end
 
+  def distance(position: nil, x: nil, y: nil)
+    if position.nil?
+      total = ((x - @x).abs + (y - @y).abs)
+    else
+      total = ((position.x - @x).abs + (position.y - @y).abs)
+    end
+  end
 
-  def print_info
-    print "(#{@x},#{@y})"
+  def to_string
+    "(#{@x},#{@y})"
   end
 
 end
