@@ -20,8 +20,8 @@ drivers:
     y: 40
   -
     name: "Bambang"
-    x: 1
-    y: 8
+    y: 1
+    x: 8
   -
     x: 31
     y: 4

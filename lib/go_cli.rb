@@ -29,7 +29,7 @@ module GoCli
 
       # initialize data from ARGV
       if ARGV.length > 1      # run with determined map size and user's location
-        @map_size = ARGV[0].to_i
+        @map_size = ARGV[0].to_i.abs
         @user = User.new(x: ARGV[1].to_i, y: ARGV[2].to_i)
       elsif ARGV.length > 0  # run with file input
         read_file_input(ARGV[0])

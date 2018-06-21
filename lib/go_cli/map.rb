@@ -17,13 +17,13 @@ module Map
   def assign_person(person:, x: nil, y: nil, mark: nil)
     class_name = person.class.name.split('::').last
     unless x.nil? && y.nil?
-      mark.nil? ? @map[x][y] = "?" : @map[x][y] = mark.to_s
+      mark.nil? ? @map[y - 1][x - 1] = "?" : @map[y - 1][x - 1] = mark.to_s
     else
       @user_position = person.position if class_name == "User"
       if mark.nil?
-        @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
+        @map[person.position.y - 1][person.position.x - 1] = person.instance_variable_get(:@id)
       else
-        @map[person.position.x - 1][person.position.y - 1] = mark
+        @map[person.position.y - 1][person.position.x - 1] = mark
       end
     end
   end

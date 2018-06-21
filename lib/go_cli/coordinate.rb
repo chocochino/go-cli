@@ -3,8 +3,8 @@ class Coordinate
 
   def initialize(x: nil, y: nil, random_size: nil)
     if random_size.nil?
-      x.nil? ? @x = 1 : @x = x
-      y.nil? ? @y = 1 : @y = y
+      x.nil? ? @x = 1 : @x = x.abs
+      y.nil? ? @y = 1 : @y = y.abs
     else
       random_coordinate(random_size) 
     end

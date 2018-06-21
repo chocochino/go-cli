@@ -12,7 +12,6 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{A dummy command-line version of GO-RIDE.}
   spec.description   = %q{This is a repository created to satisfy the second stage of SEA COMPFEST X GO-JEK by Livia Andriana Lohanda.}
   spec.homepage      = ""
-  spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
