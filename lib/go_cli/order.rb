@@ -4,8 +4,8 @@ require "go_cli/file_parser"
 module Order
   include FileParser
 
-  def new_order(origin:, destination_x:, destination_y:, order_id: 0)
-    @destination = Coordinate.new(x: destination_x, y: destination_y)
+  def new_order(origin:, destination:, order_id: 0)
+    @destination = destination
     @origin = origin
     @order_id = order_id
   end
@@ -50,7 +50,7 @@ module Order
     end
   end
 
-  def find_nearest_driver(list:)
+  def find_nearest_driver(list:)        # return chosen driver's id
     @driver = list[0]
     min_distance = @driver.position.distance(position: @origin)
     list.shift
@@ -61,10 +61,11 @@ module Order
         min_distance = temp
       end
     end
+    @driver.instance_variable_get(:@id).to_i
   end
 
   def display_order
-    puts "Driver #{@driver.name} will take you to your destination."
+    puts "Driver #{@driver.name}, currently at #{@driver.position.to_string}, will take you to your destination."
     puts "Here is the route you will be taking: \n#{create_route}"
     puts "We estimate this trip will cost you #{calculate_fare(base_fare: @base_fare)}."
   end

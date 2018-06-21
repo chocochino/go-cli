@@ -1,0 +1,27 @@
+map-size: 30
+user:
+  x: 5
+  y: 6
+drivers:
+  - 
+    name: "Hasan"
+    x: 30
+    y: 20
+  -
+    x: 10
+    y: 21
+  -
+    name: "Supri"
+    x: 7
+    y: 7
+  -
+    name: "Ali"
+    x: 30
+    y: 40
+  -
+    name: "Bambang"
+    x: 1
+    y: 8
+  -
+    x: 31
+    y: 4

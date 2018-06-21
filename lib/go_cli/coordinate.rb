@@ -10,12 +10,12 @@ class Coordinate
     end
   end
 
-  def random_coordinate(size)
+  def random_coordinate(size)                  # assign random coordinates
     @x = rand(1..size)
     @y = rand(1..size)
   end
 
-  def distance(position: nil, x: nil, y: nil)
+  def distance(position: nil, x: nil, y: nil)  # measure manhattan distance
     if position.nil?
       total = ((x - @x).abs + (y - @y).abs)
     else

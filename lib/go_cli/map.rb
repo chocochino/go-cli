@@ -1,24 +1,30 @@
 require "go_cli/coordinate"
 
 module Map
+  EMPTY_COORDINATE = "."
+
   def create_map(map_size)
     @map_size = map_size
     @map = Array.new
     for i in 0...map_size do
       @map.push(Array.new)
       for j in 0...map_size do
-        @map[i].push(".")
+        @map[i].push(Map::EMPTY_COORDINATE)
       end
     end
   end
 
-  def assign_person(person:, x: nil, y: nil, mark: "?")
+  def assign_person(person:, x: nil, y: nil, mark: nil)
     class_name = person.class.name.split('::').last
-    if person.nil?
+    unless x.nil? && y.nil?
       mark.nil? ? @map[x][y] = "?" : @map[x][y] = mark.to_s
     else
       @user_position = person.position if class_name == "User"
-      @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
+      if mark.nil?
+        @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
+      else
+        @map[person.position.x - 1][person.position.y - 1] = mark
+      end
     end
   end
 
@@ -40,5 +46,20 @@ module Map
     print "|\n+"
     @map_size.downto(-1) { print "-" }
     puts "+", "Your position at the map is #{@user_position.to_string} indicated by '#{User.user_id}'.", "The rest indicated driver's position."
+  end
+
+  def update_position(person:, position: nil, x: nil, y: nil)
+    unless position.nil?
+      x = position.x
+      y = position.y
+    end
+
+    # empty original place
+    assign_person(person: person, mark: Map::EMPTY_COORDINATE)
+
+    # update map
+    person.position.x = x
+    person.position.y = y
+    assign_person(person: person)
   end
 end

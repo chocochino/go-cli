@@ -25,7 +25,7 @@ module GoCli
     end
 
     def starting_app
-      puts "Welcome to GO-CLI app!"
+      puts "Welcome to GO-CLI app v#{GoCli::VERSION}!"
 
       # initialize data from ARGV
       if ARGV.length > 1      # run with determined map size and user's location
@@ -40,15 +40,42 @@ module GoCli
 
       # initialize map and drivers
       create_map(@map_size)
+      @drivers.empty? ? generate_driver_randomly : @drivers.each { |d| assign_person(person: d) }
       assign_person(person: @user)
-      generate_driver_randomly if @drivers.empty?
 
       # start menu
       menu
     end
 
     def read_file_input(filename)
+      begin     # File error handling
+        input = YAML.load(File.read(filename))
+        @map_size = input["map-size"] if input.has_key?("map-size")
+      rescue Exception
+        puts "File loading failed, please check if the YAML file exists."
+        random_coordinate = Coordinate.new(random_size: @map_size)
+        @user = User.new(position: random_coordinate)
+        return
+      end
 
+      if input.has_key?("user")    #check user's position
+        input["user"].has_key?("x") ? user_x = input["user"]["x"].to_i : user_x = nil
+        input["user"].has_key?("y") ? user_y = input["user"]["y"].to_i : user_y = nil
+        @user = User.new(x: user_x, y: user_y)
+      else
+        random_coordinate = Coordinate.new(random_size: @map_size)
+        @user = User.new(position: random_coordinate)
+      end
+
+      if input.has_key?("drivers")   # check driver's position
+        input["drivers"].each do |driver|
+          driver.has_key?("name") ? driver_name = driver["name"] : driver_name = ""
+          unless driver["x"] > @map_size || driver["y"] > @map_size
+            new_driver = Driver.new(name: driver_name, x: driver["x"], y: driver["y"])
+            @drivers.push(new_driver)
+          end
+        end
+      end
     end
     
     def generate_driver_randomly
@@ -106,24 +133,34 @@ module GoCli
       choice = STDIN.gets.chomp
       menu if choice.downcase == "n"  # back to menu if cancel inputting
       choice = choice.tr('[]()', '').gsub(/\s+/, "").split(",").map(&:to_i)
+      choice[1] = choice[0] if choice[1].nil?
       choice.each do |i|              # destination input's error handling
         unless i.between?(1, @map_size)
           puts "Sorry, but your intended destination is outside our coverage or you mistyped the input.", "We cover areas from (1,1) to (#{@map_size},#{@map_size}).", ""
           create_order
+          return
         end
       end
       puts "\n"
 
       # show details about the order
-      new_order(origin: @user.position, destination_x: choice[0], destination_y: choice[1], order_id: @order_amount + 1)
+      destination = Coordinate.new(x: choice[0], y: choice[1])
+      new_order(origin: @user.position, destination: destination, order_id: @order_amount + 1)
 
-      find_nearest_driver(list: @drivers)
+      driver_id = find_nearest_driver(list: @drivers)
       display_order
       
       # order confirmation
       menu unless confirm_order?   # back to menu if order cancelled
       @order_amount += 1
+      position_after_order(driver_id, destination)
       puts "\nYour trip has finished. Thank you for using GO-RIDE service."
+    end
+
+    def position_after_order(driver_id, destination)
+      update_position(person: @drivers[driver_id - 2], position: destination)
+      update_position(person: @user, position: destination)
+      @drivers[driver_id - 2].position = @user.position = destination
     end
   end
 end
