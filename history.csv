@@ -14,3 +14,8 @@ ID,Driver,Fare,Route
 - Turn right
 - Go to (3,5)
 - Finish at (3,5)"
+4,No. 3,IDR 5.400,"- Start at (12,13)
+- Go to (12,4)
+- Turn right
+- Go to (3,4)
+- Finish at (3,4)"

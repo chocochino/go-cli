@@ -4,10 +4,15 @@ require "go_cli/driver"
 require "go_cli/user"
 require "go_cli/map"
 require "go_cli/order"
-require "csv"
+require "go_cli/file_parser"
+require "yaml"
 
 module GoCli
   class App
+    include FileParser
+    include Map
+    include Order
+    
     attr_writer :base_fare
 
     def initialize
@@ -15,9 +20,8 @@ module GoCli
       @drivers_amount = 5
       @base_fare = 300
       @drivers = Array.new
-      @history_filename = "history.csv"
-      create_history_file unless File.exist?(@history_filename)
-      @order_amount = CSV.foreach(@history_filename, headers: true).count
+      prepare_history_file("history.csv")
+      @order_amount = get_order_count
     end
 
     def starting_app
@@ -27,39 +31,42 @@ module GoCli
       if ARGV.length > 1      # run with determined map size and user's location
         @map_size = ARGV[0].to_i
         @user = User.new(x: ARGV[1].to_i, y: ARGV[2].to_i)
-      #elsif ARGV.length > 0  # run with file input
+      elsif ARGV.length > 0  # run with file input
+        read_file_input(ARGV[0])
       else                    # run with pre-determined value
         random_coordinate = Coordinate.new(random_size: @map_size)
         @user = User.new(position: random_coordinate)
       end
 
       # initialize map and drivers
-      @map = Map.new(@map_size)
-      @map.assign_person(person: @user)
-      generate_driver_randomly
+      create_map(@map_size)
+      assign_person(person: @user)
+      generate_driver_randomly if @drivers.empty?
 
       # start menu
       menu
     end
 
+    def read_file_input(filename)
+
+    end
+    
     def generate_driver_randomly
       forbidden_coordinate = [@user.position]
       random_coordinate = Coordinate.new
-      1.upto(@drivers_amount) do
-        loop do
+      1.upto(@drivers_amount) do    # generate driver's coordinate
+        loop do                     # avoid overlapping coordinates
           random_coordinate = Coordinate.new(random_size: @map_size)
           break if forbidden_coordinate.detect { |d| d.x == 
             random_coordinate.x && d.y == random_coordinate.y} == nil
         end
         forbidden_coordinate.push(random_coordinate)
+
+        # assign coordinates
         driver = Driver.new(position: random_coordinate)
         @drivers.push(driver)
-        @map.assign_person(person: driver)
+        assign_person(person: driver)
       end
-    end
-
-    def create_history_file
-      CSV.open(@history_filename, "wb", write_headers: true) { |csv| csv << %w(ID Driver Fare Route)}
     end
 
     def menu
@@ -72,10 +79,14 @@ module GoCli
       # go to selected choice
       case choice
       when "1"
-        @map.draw_map
+        draw_map
       when "2"
         create_order
       when "3"
+        if @order_amount == 0   # if history is empty
+          puts "Please finish at least one trip using GO-RIDE to view history."
+          menu
+        end
         view_history
       when "4"
         puts "Thank you for using GO-CLI, see you next time."
@@ -104,33 +115,15 @@ module GoCli
       puts "\n"
 
       # show details about the order
-      order = Order.new(origin: @user.position, destination_x: choice[0], destination_y: choice[1], order_id: @order_amount)
-      driver = order.find_nearest_driver(list: @drivers)
-      puts "Driver #{driver.name} will take you to your destination."
-      puts "Here is the route you will be taking: \n#{order.create_route}"
-      puts "We estimate this trip will cost you #{order.calculate_fare(base_fare: @base_fare)}."
+      new_order(origin: @user.position, destination_x: choice[0], destination_y: choice[1], order_id: @order_amount + 1)
+
+      find_nearest_driver(list: @drivers)
+      display_order
       
       # order confirmation
-      menu unless order.confirm_order?   # back to menu if order cancelled
-      order.add_to_history(@history_filename)
+      menu unless confirm_order?   # back to menu if order cancelled
       @order_amount += 1
       puts "\nYour trip has finished. Thank you for using GO-RIDE service."
-    end
-
-    def view_history
-      if @order_amount == 0
-        puts "Please finish at least one trip using GO-RIDE to view history."
-        menu
-      end
-      puts "Here are your trip history:"
-      CSV.open(@history_filename, headers: true) do |entry|
-        entry.each do |history|
-          route = history['Route'].split("\n")
-          puts "#{history['ID']}. Driver's name: #{history['Driver']}", "   Fare: #{history['Fare']}", "   Route: #{route[0]}"
-          1.upto(route.length-1) { |i| puts "          #{route[i]}"}
-          puts ""
-        end
-      end
     end
   end
 end

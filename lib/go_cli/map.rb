@@ -1,9 +1,7 @@
 require "go_cli/coordinate"
 
-class Map
-  attr_accessor :map
-
-  def initialize(map_size)
+module Map
+  def create_map(map_size)
     @map_size = map_size
     @map = Array.new
     for i in 0...map_size do
@@ -19,14 +17,8 @@ class Map
     if person.nil?
       mark.nil? ? @map[x][y] = "?" : @map[x][y] = mark.to_s
     else
-      if class_name == "User"
-        @user_position = person.position
-        @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
-      elsif class_name == "Driver"
-        @map[person.position.x - 1][person.position.y - 1] = "D"
-      else
-        @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
-      end
+      @user_position = person.position if class_name == "User"
+      @map[person.position.x - 1][person.position.y - 1] = person.instance_variable_get(:@id)
     end
   end
 

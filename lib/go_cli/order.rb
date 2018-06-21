@@ -1,12 +1,14 @@
 require "go_cli/coordinate"
-require "csv"
+require "go_cli/file_parser"
 
-class Order
-  def initialize(origin:, destination_x:, destination_y:, order_id: 0)
+module Order
+  include FileParser
+
+  def new_order(origin:, destination_x:, destination_y:, order_id: 0)
     @destination = Coordinate.new(x: destination_x, y: destination_y)
     @origin = origin
     @order_id = order_id
-  end 
+  end
 
   def create_route
     @route = "- Start at #{@origin.to_string}\n"
@@ -34,15 +36,15 @@ class Order
   end
 
   def confirm_order?
-    print "Confirm order? (y/n): "
+    print "Confirm order? (y/n): "      # get input
     choice = STDIN.gets.gsub(/\s+/, "")
     case choice.downcase
-    when "y"
-      @order_id += 1
+    when "y"                            # complete order
+      add_to_history(order_id: @order_id, name: @driver.name, fare: @string_fare, route: @route)
       true
-    when "n"
+    when "n"                            # cancel order
       false
-    else
+    else                                # error handling
       puts "Sorry, you can only input 'y' or 'n'."
       confirm_order?
     end
@@ -59,12 +61,11 @@ class Order
         min_distance = temp
       end
     end
-    @driver
   end
 
-  def add_to_history(filename)
-    data = Array.new
-    data.push(@order_id, @driver.name, @string_fare, @route)
-    CSV.open(filename, "ab") { |csv| csv << data }
+  def display_order
+    puts "Driver #{@driver.name} will take you to your destination."
+    puts "Here is the route you will be taking: \n#{create_route}"
+    puts "We estimate this trip will cost you #{calculate_fare(base_fare: @base_fare)}."
   end
 end
